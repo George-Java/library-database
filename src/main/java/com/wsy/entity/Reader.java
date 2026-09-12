@@ -1,5 +1,8 @@
 package com.wsy.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,12 +10,13 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.time.format.DateTimeFormatter;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@TableName("tb_reader")
 public class Reader implements Serializable {
+    @TableId(value = "barcode", type = IdType.INPUT)
     private String barcode;
     private String name;
     private String sex;

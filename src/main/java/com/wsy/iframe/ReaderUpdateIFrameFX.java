@@ -90,10 +90,10 @@ public class ReaderUpdateIFrameFX {
         addColumn(result, "证件类型", "type");
         addColumn(result, "证件号码", "identityCard");
         addColumn(result, "最大借书量", "maxNum");
-        addColumn(result, "会员有效期", "dateString");
+        addColumn(result, "会员有效期", "date");
         addColumn(result, "电话", "phone");
         addColumn(result, "押金", "keepMoney");
-        addColumn(result, "办证日期", "dateOfIssuanceString");
+        addColumn(result, "办证日期", "dateOfIssuance");
         result.setPlaceholder(new Label("暂无读者信息"));
         return result;
     }

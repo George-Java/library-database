@@ -21,6 +21,6 @@
         </environment>
     </environments>
     <mappers>
-        <mapper class="com.wsy.mapper.LibraryMapper"/>
+        <mapper class="com.wsy.mapper.ModuleMapper"/>
     </mappers>
 </configuration>

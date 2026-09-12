@@ -1,6 +1,6 @@
 package com.wsy.util;
 
-import com.wsy.mapper.LibraryMapper;
+import com.wsy.mapper.ModuleMapper;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
@@ -20,7 +20,7 @@ public class DBUtils {
 
     @FunctionalInterface
     public interface MapperAction<T> {
-        T apply(LibraryMapper mapper) throws SQLException;
+        T apply(ModuleMapper mapper) throws SQLException;
     }
 
     private static SqlSessionFactory buildSqlSessionFactory() {
@@ -49,7 +49,7 @@ public class DBUtils {
 
     public static <T> T query(MapperAction<T> action) throws SQLException {
         try (SqlSession session = sqlSessionFactory.openSession(true)) {
-            return action.apply(session.getMapper(LibraryMapper.class));
+            return action.apply(session.getMapper(ModuleMapper.class));
         } catch (PersistenceException ex) {
             throw unwrapSQLException(ex);
         }
@@ -57,7 +57,7 @@ public class DBUtils {
 
     public static <T> T transaction(MapperAction<T> action) throws SQLException {
         try (SqlSession session = sqlSessionFactory.openSession(false)) {
-            T result = action.apply(session.getMapper(LibraryMapper.class));
+            T result = action.apply(session.getMapper(ModuleMapper.class));
             session.commit();
             return result;
         } catch (PersistenceException ex) {
