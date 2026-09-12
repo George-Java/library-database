@@ -1,32 +1,15 @@
 package com.wsy.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Stockpile implements Serializable {
     private String bookISBN;
     private int stockQuantity;
-
-    public Stockpile() {
-    }
-
-    public Stockpile(String bookISBN, int stockQuantity) {
-        this.bookISBN = bookISBN;
-        this.stockQuantity = stockQuantity;
-    }
-
-    public String getBookISBN() {
-        return bookISBN;
-    }
-
-    public void setBookISBN(String bookISBN) {
-        this.bookISBN = bookISBN;
-    }
-
-    public int getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
 }

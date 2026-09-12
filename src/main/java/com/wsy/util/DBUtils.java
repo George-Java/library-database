@@ -10,6 +10,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,11 +25,26 @@ public class DBUtils {
 
     private static SqlSessionFactory buildSqlSessionFactory() {
         try (InputStream inputStream = Resources.getResourceAsStream("mybatis-config.xml")) {
-            return new SqlSessionFactoryBuilder().build(inputStream);
+            Properties properties = new Properties();
+            properties.setProperty("db.driver", valueOrDefault("DB_DRIVER", "com.mysql.cj.jdbc.Driver"));
+            properties.setProperty("db.url", valueOrDefault("DB_URL",
+                    "jdbc:mysql://localhost:3306/library?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"));
+            properties.setProperty("db.username", valueOrDefault("DB_USER", "root"));
+            properties.setProperty("db.password", valueOrDefault("DB_PASSWORD", "123456"));
+            return new SqlSessionFactoryBuilder().build(inputStream, properties);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "MyBatis 配置加载失败", ex);
             throw new ExceptionInInitializerError(ex);
         }
+    }
+
+    private static String valueOrDefault(String key, String defaultValue) {
+        String systemValue = System.getProperty(key);
+        if (systemValue != null && !systemValue.isBlank()) {
+            return systemValue;
+        }
+        String envValue = System.getenv(key);
+        return envValue == null || envValue.isBlank() ? defaultValue : envValue;
     }
 
     public static <T> T query(MapperAction<T> action) throws SQLException {

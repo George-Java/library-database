@@ -6,15 +6,15 @@ USE library;
 CREATE TABLE IF NOT EXISTS tb_operator
 (
     id           INT PRIMARY KEY COMMENT '操作员编号',
-    name         VARCHAR(12) NOT NULL COMMENT '姓名',
-    sex          VARCHAR(2) COMMENT '性别',
+    name         VARCHAR(20) NOT NULL COMMENT '姓名',
+    sex          VARCHAR(10) COMMENT '性别',
     age          INT COMMENT '年龄',
-    phone        VARCHAR(13) COMMENT '电话',
+    phone        VARCHAR(20) COMMENT '电话',
     identityCard VARCHAR(30) NOT NULL COMMENT '身份证号',
     workDate     DATETIME    NOT NULL COMMENT '工作日期',
     admin        BOOLEAN DEFAULT 0 COMMENT '是否为管理员',
-    userName     VARCHAR(20) NOT NULL COMMENT '用户名',
-    password     VARCHAR(10) NOT NULL COMMENT '密码',
+    userName     VARCHAR(30) NOT NULL COMMENT '用户名',
+    password     VARCHAR(30) NOT NULL COMMENT '密码',
     UNIQUE KEY (userName),
     UNIQUE KEY (identityCard)
 ) COMMENT '操作员信息表&用户表';
@@ -28,7 +28,7 @@ VALUES (101, 'Jonny', '男', 24, '1000000', '452167200104064537', '2025-06-04 09
 CREATE TABLE IF NOT EXISTS tb_bookType
 (
     number   VARCHAR(13) PRIMARY KEY COMMENT '类别编号',
-    typeName VARCHAR(20) NOT NULL COMMENT '类别名称',
+    typeName VARCHAR(30) NOT NULL COMMENT '类别名称',
     days     INT         NOT NULL DEFAULT 30 CHECK (days BETWEEN 1 AND 365) COMMENT '可借天数',
     fk       FLOAT       NOT NULL DEFAULT 0.5 CHECK (fk >= 0) COMMENT '罚款金额',
     UNIQUE KEY (typeName)
@@ -44,15 +44,15 @@ VALUES ('TP0001', '计算机', 30, 0.5),
 CREATE TABLE IF NOT EXISTS tb_reader
 (
     barcode        VARCHAR(13) PRIMARY KEY COMMENT '读者条形码',
-    name           VARCHAR(10)  NOT NULL COMMENT '姓名',
-    sex            VARCHAR(2) COMMENT '性别',
+    name           VARCHAR(20)  NOT NULL COMMENT '姓名',
+    sex            VARCHAR(10) COMMENT '性别',
     age            INT COMMENT '年龄',
-    profession     VARCHAR(20) COMMENT '职业',
-    type           VARCHAR(15)  NOT NULL COMMENT '有效证件类型',
+    profession     VARCHAR(30) COMMENT '职业',
+    type           VARCHAR(30)  NOT NULL COMMENT '有效证件类型',
     identityCard   VARCHAR(30)  NOT NULL COMMENT '证件号码',
     maxNum         INT UNSIGNED NOT NULL DEFAULT 5 COMMENT '最大借书数量',
     date           DATETIME     NOT NULL COMMENT '会员有效日期',
-    phone          VARCHAR(13)  NOT NULL COMMENT '电话',
+    phone          VARCHAR(20)  NOT NULL COMMENT '电话',
     keepMoney      FLOAT        NOT NULL DEFAULT 100.00 COMMENT '押金',
     dateOfIssuance DATE         NOT NULL COMMENT '办证日期',
     UNIQUE KEY (identityCard)
@@ -67,20 +67,20 @@ VALUES ('R20230001', '李明', '男', 25, '工程师', '身份证', '11010119980
        ('R20230003', '张伟', '男', 30, '教师', '身份证', '310105199302034568', 8, '2026-12-31 23:59:59', '13700137003',
         200.00, '2023-03-10');
 
--- 图书信息表 - 核心修改在这里
+-- 图书信息表
 CREATE TABLE IF NOT EXISTS tb_bookInfo
 (
     bookISBN   CHAR(13) PRIMARY KEY COMMENT '书籍编号',
-    category   VARCHAR(13) NOT NULL COMMENT '图书类别', -- 恢复NOT NULL约束
-    bookname   VARCHAR(40) NOT NULL COMMENT '图书名称',
-    writer     VARCHAR(20) COMMENT '作者',
-    publisher  VARCHAR(50) NOT NULL COMMENT '出版社',
-    translator VARCHAR(30) COMMENT '译者',
+    category   VARCHAR(13) NOT NULL COMMENT '图书类别',
+    bookname   VARCHAR(100) NOT NULL COMMENT '图书名称',
+    writer     VARCHAR(100) COMMENT '作者',
+    publisher  VARCHAR(100) NOT NULL COMMENT '出版社',
+    translator VARCHAR(100) COMMENT '译者',
     date       DATE        NOT NULL COMMENT '出版日期',
     price      DOUBLE      NOT NULL COMMENT '图书价格',
     CONSTRAINT fk_book_category FOREIGN KEY (category)
         REFERENCES tb_bookType (number)
-        ON DELETE RESTRICT                              -- 关键修改：阻止删除有关联图书的类别
+        ON DELETE RESTRICT
 );
 
 INSERT INTO tb_bookInfo (bookISBN, category, bookname, writer, publisher, translator, date, price)
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS tb_order
     bookISBN       CHAR(13) NOT NULL COMMENT '书籍编号',
     date           DATETIME NOT NULL COMMENT '订购日期',
     number         INT      NOT NULL COMMENT '订购数量',
-    operator       INT      NOT NULL COMMENT '操作员ID', -- 修改为关联操作员ID
+    operator       INT      NOT NULL COMMENT '操作员ID',
     checkAndAccept INT      NOT NULL DEFAULT 0 COMMENT '是否验收（0-未验收，1-已验收）',
     discount       FLOAT    NOT NULL DEFAULT 0.0 COMMENT '折扣',
     CONSTRAINT fk_order_book FOREIGN KEY (bookISBN)
@@ -160,37 +160,35 @@ VALUES ('R20230001', '9787121346244', 102, 0, '2023-06-01 09:30:00', NULL),
 -- 创建视图：图书详细信息视图
 CREATE OR REPLACE VIEW v_book_details AS
 SELECT b.bookISBN      AS ISBN,
-       b.bookname      AS 书名,
-       bt.typeName     AS 类别,
-       b.writer        AS 作者,
-       b.translator    AS 译者,
-       b.publisher     AS 出版社,
-       b.date          AS 出版日期,
-       b.price         AS 定价,
-       s.stockQuantity AS 库存数量,
-       bt.days         AS 可借天数,
-       bt.fk           AS 每日罚金
+       b.bookname      AS book_name,
+       bt.typeName     AS type_name,
+       b.writer        AS writer,
+       b.translator    AS translator,
+       b.publisher     AS publisher,
+       b.date          AS pub_date,
+       b.price         AS price,
+       s.stockQuantity AS stock_quantity,
+       bt.days         AS borrow_days,
+       bt.fk           AS daily_fine
 FROM tb_bookInfo b
          JOIN tb_bookType bt ON b.category = bt.number
          JOIN tb_stockpile s ON b.bookISBN = s.bookISBN;
 
 -- 创建视图：借阅详情视图
 CREATE OR REPLACE VIEW v_borrow_details AS
-SELECT b.borrowId                                                                     AS 借阅ID,
-       r.barcode                                                                      AS 读者条码,
-       r.name                                                                         AS 读者姓名,
-       bi.bookname                                                                    AS 图书名称,
-       o.name                                                                         AS 操作员,
-       b.borrowDate                                                                   AS 借阅日期,
-       b.backDate                                                                     AS 归还日期,
-       bt.days                                                                        AS 允许借阅天数,
-       IF(b.isBack = 1, '已还', '未还')                                               AS 状态,
-       IF(b.isBack = 0 AND DATEDIFF(CURRENT_DATE(), b.borrowDate) > bt.days, CONCAT(
-               '超期',
-               GREATEST(0, DATEDIFF(CURRENT_DATE(), b.borrowDate) - bt.days),
-               '天，罚金：',
-               (GREATEST(0, DATEDIFF(CURRENT_DATE(), b.borrowDate) - bt.days)) * bt.fk
-                                                                             ), NULL) AS 超期信息
+SELECT b.borrowId     AS borrow_id,
+       r.barcode      AS reader_barcode,
+       r.name         AS reader_name,
+       bi.bookname    AS book_name,
+       o.name         AS operator_name,
+       b.borrowDate   AS borrow_date,
+       b.backDate     AS return_date,
+       bt.days        AS allowed_days,
+       IF(b.isBack = 1, 'returned', 'borrowed') AS status,
+       IF(b.isBack = 0 AND DATEDIFF(CURRENT_DATE(), b.borrowDate) > bt.days, 
+          CONCAT('Overdue ', GREATEST(0, DATEDIFF(CURRENT_DATE(), b.borrowDate) - bt.days), 
+                 ' days, fine: ', (GREATEST(0, DATEDIFF(CURRENT_DATE(), b.borrowDate) - bt.days)) * bt.fk),
+          NULL) AS overdue_info
 FROM tb_borrow b
          JOIN tb_reader r ON b.readerNumber = r.barcode
          JOIN tb_bookInfo bi ON b.bookISBN = bi.bookISBN
@@ -199,16 +197,16 @@ FROM tb_borrow b
 
 -- 创建视图：订单详情视图
 CREATE OR REPLACE VIEW v_order_details AS
-SELECT o.orderId                                    AS 订单ID,
-       o.bookISBN                                   AS ISBN,
-       b.bookname                                   AS 书名,
-       o.date                                       AS 订购日期,
-       o.number                                     AS 订购数量,
-       op.name                                      AS 操作员,
-       o.discount                                   AS 折扣,
-       b.price                                      AS 定价,
-       (b.price * o.number * (1 - o.discount))      AS 总价,
-       IF(o.checkAndAccept = 0, '未验收', '已验收') AS 验收状态
+SELECT o.orderId   AS order_id,
+       o.bookISBN  AS isbn,
+       b.bookname  AS book_name,
+       o.date      AS order_date,
+       o.number    AS quantity,
+       op.name     AS operator_name,
+       o.discount  AS discount,
+       b.price     AS unit_price,
+       (b.price * o.number * (1 - o.discount)) AS total_price,
+       IF(o.checkAndAccept = 0, 'unchecked', 'checked') AS check_status
 FROM tb_order o
          JOIN tb_bookInfo b ON o.bookISBN = b.bookISBN
          JOIN tb_operator op ON o.operator = op.id;
